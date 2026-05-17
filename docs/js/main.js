@@ -16,7 +16,7 @@ const db  = getDatabase(app);
 
 const STATUS_LABEL = {
   on_round:          'ラウンド中',
-  at_customer:       'お客様宅滞在中',
+  at_customer:       '目的地滞在中',
   departed_customer: '帰途中',
   completed:         '完了',
 };
@@ -155,8 +155,8 @@ function renderActiveRounds(data) {
         ${r.purpose      ? `<div class="round-info"><span class="info-label">外出理由</span><span class="info-value">${r.purpose}</span></div>` : ''}
         ${r.memberNumber ? `<div class="round-info"><span class="info-label">会員番号</span><span class="info-value member-masked">${r.memberNumber}</span></div>` : ''}
         ${r.roundPurpose ? `<div class="round-info"><span class="info-label">ラウンド目的</span><span class="info-value">${r.roundPurpose}</span></div>` : ''}
-        ${r.arrivedAt    ? `<div class="round-info"><span class="info-label">到着時刻</span><span class="info-value">${r.arrivedAt}</span></div>` : ''}
-        ${r.departedCustomerAt ? `<div class="round-info"><span class="info-label">お客様宅出発</span><span class="info-value">${r.departedCustomerAt}</span></div>` : ''}
+        ${r.arrivedAt    ? `<div class="round-info"><span class="info-label">目的地着</span><span class="info-value">${r.arrivedAt}</span></div>` : ''}
+        ${r.departedCustomerAt ? `<div class="round-info"><span class="info-label">目的地発</span><span class="info-value">${r.departedCustomerAt}</span></div>` : ''}
       </div>
       <div class="round-card__actions">${actionButton(r)}</div>
     </div>
@@ -173,9 +173,9 @@ function renderActiveRounds(data) {
 
 function actionButton(r) {
   if (r.status === 'on_round')
-    return `<button class="btn btn-arrive" data-action="arrive" data-id="${r.id}">お客様宅到着</button>`;
+    return `<button class="btn btn-arrive" data-action="arrive" data-id="${r.id}">目的地着</button>`;
   if (r.status === 'at_customer')
-    return `<button class="btn btn-depart" data-action="depart_customer" data-id="${r.id}">お客様宅出発</button>`;
+    return `<button class="btn btn-depart" data-action="depart_customer" data-id="${r.id}">目的地発</button>`;
   if (r.status === 'departed_customer')
     return `<div class="notes-input-wrap">
       <textarea class="notes-input" id="notes-${r.id}" placeholder="備考（任意）" rows="2"></textarea>
