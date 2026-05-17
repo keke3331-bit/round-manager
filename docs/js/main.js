@@ -416,6 +416,17 @@ function initEditModal() {
   });
 }
 
+/* ─── Postal code lookup ─── */
+async function lookupPostalCode(zip) {
+  const res = await fetch(`https://zipcloud.ibsnet.co.jp/api/search?zipcode=${zip}`);
+  const json = await res.json();
+  if (json.results && json.results.length > 0) {
+    const r = json.results[0];
+    return r.address1 + r.address2;
+  }
+  return null;
+}
+
 /* ─── Input page ─── */
 function buildTimeOptions(selectId, isHour) {
   const el = document.getElementById(selectId);
@@ -453,6 +464,25 @@ function initInput() {
   buildTimeOptions('ret-hour', true);  buildTimeOptions('ret-min',  false);
   setDefaultTimes();
 
+  const postalInput  = document.getElementById('postal-code');
+  const postalStatus = document.getElementById('postal-status');
+  postalInput?.addEventListener('input', async () => {
+    const val = postalInput.value.trim();
+    if (!/^\d{7}$/.test(val)) { postalStatus.textContent = ''; return; }
+    postalStatus.textContent = '検索中…';
+    try {
+      const city = await lookupPostalCode(val);
+      if (city) {
+        document.getElementById('destination').value = city;
+        postalStatus.textContent = '✓';
+      } else {
+        postalStatus.textContent = '見つかりません';
+      }
+    } catch {
+      postalStatus.textContent = 'エラー';
+    }
+  });
+
   const memberInput = document.getElementById('member-number');
   const memberError = document.getElementById('member-error');
   memberInput?.addEventListener('input', () => {
@@ -461,7 +491,7 @@ function initInput() {
   });
 
   document.getElementById('btn-clear')?.addEventListener('click', () => {
-    form.reset(); memberError.textContent = ''; setDefaultTimes();
+    form.reset(); memberError.textContent = ''; postalStatus.textContent = ''; setDefaultTimes();
   });
 
   form.addEventListener('submit', async e => {
