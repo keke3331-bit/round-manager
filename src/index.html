@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ダッシュボード | ラウンド管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header__logo">ラウンド管理</div>
+  <nav class="header__nav">
+    <a href="index.html" class="active">ダッシュボード</a>
+    <a href="pages/input.html">新規ラウンド</a>
+  </nav>
+  <button class="hamburger" aria-label="メニュー">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main class="main">
+
+  <!-- ラウンド中プランナー -->
+  <section class="active-section">
+    <h2 class="section-title">ラウンド中のプランナー</h2>
+    <div class="round-grid" id="active-rounds">
+      <p class="no-rounds">読み込み中…</p>
+    </div>
+  </section>
+
+  <!-- 履歴 -->
+  <section class="history-section">
+    <h2 class="section-title">ラウンド履歴</h2>
+    <div class="period-bar">
+      <label for="period-select">表示期間</label>
+      <select id="period-select">
+        <option value="daily">日別</option>
+        <option value="weekly">週別</option>
+        <option value="monthly">月別</option>
+      </select>
+      <label for="date-input">日付</label>
+      <input type="date" id="date-input">
+      <button class="btn-nav" id="btn-prev">← 前へ</button>
+      <button class="btn-nav" id="btn-next">次へ →</button>
+      <span id="period-label" class="period-label"></span>
+    </div>
+    <div class="card table-wrap" style="padding:0">
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>プランナー</th>
+            <th>目的地</th>
+            <th>出発</th>
+            <th>戻り予定</th>
+            <th>お客様宅到着</th>
+            <th>お客様宅出発</th>
+            <th>BASE到着</th>
+            <th>ステータス</th>
+            <th>備考</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<a href="pages/input.html" class="fab">+ 新規ラウンド</a>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新規ラウンド | ラウンド管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="header__logo">ラウンド管理</div>
+  <nav class="header__nav">
+    <a href="../index.html">ダッシュボード</a>
+    <a href="input.html" class="active">新規ラウンド</a>
+  </nav>
+  <button class="hamburger" aria-label="メニュー">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<main class="main">
+  <div class="form-container">
+    <div class="form-card">
+      <h1 class="form-title">新規ラウンド登録</h1>
+      <p class="form-date" id="date-display"></p>
+
+      <form id="round-form" novalidate>
+
+        <div class="form-group">
+          <label for="planner-select">プランナー名 <span class="required">*</span></label>
+          <select id="planner-select" required>
+            <option value="">選択してください</option>
+            <option value="井戸">井戸</option>
+            <option value="関根">関根</option>
+            <option value="柴">柴</option>
+            <option value="片桐">片桐</option>
+            <option value="渡辺">渡辺</option>
+            <option value="入江">入江</option>
+            <option value="金">金</option>
+            <option value="新田">新田</option>
+            <option value="玉井">玉井</option>
+            <option value="菊池">菊池</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="purpose">目的</label>
+          <input type="text" id="purpose" placeholder="例：新規顧客訪問">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>出発時間 <span class="required">*</span></label>
+            <div class="time-select">
+              <select id="dep-hour"></select>
+              <span>時</span>
+              <select id="dep-min"></select>
+              <span>分</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>戻り予定時間 <span class="required">*</span></label>
+            <div class="time-select">
+              <select id="ret-hour"></select>
+              <span>時</span>
+              <select id="ret-min"></select>
+              <span>分</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="destination">目的地（市町村） <span class="required">*</span></label>
+          <input type="text" id="destination" placeholder="例：松戸市" required>
+        </div>
+
+        <div class="form-group">
+          <label for="member-number">会員番号</label>
+          <input type="text" id="member-number" placeholder="8桁（任意）" maxlength="20">
+          <p class="field-error" id="member-error"></p>
+        </div>
+
+        <div class="form-group">
+          <label for="round-purpose">ラウンド目的</label>
+          <textarea id="round-purpose" rows="2" placeholder="例：保険見直し提案"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="expected-deliverable">見込み成果物</label>
+          <textarea id="expected-deliverable" rows="2" placeholder="例：医療保険加入"></textarea>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">ラウンド開始</button>
+          <button type="button" id="btn-clear" class="btn btn-secondary">クリア</button>
+        </div>
+
+      </form>
+
+      <a href="../index.html" class="back-link">← ダッシュボードへ戻る</a>
+    </div>
+  </div>
+</main>
+
+<div class="toast"></div>
+<script type="module" src="../js/main.js"></script>
+</body>
+</html>
