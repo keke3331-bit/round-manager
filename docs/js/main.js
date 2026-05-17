@@ -57,6 +57,55 @@ function getMonthDates(y, m) {
   );
 }
 
+/* ─── Notifications ─── */
+const notifiedScheduled = new Set();
+const notifiedOverdue   = new Set();
+
+async function requestNotificationPermission() {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+}
+
+function showNotification(title, body) {
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  new Notification(title, { body, lang: 'ja' });
+}
+
+function notifyStatusChange(r, toStatus) {
+  const name = r.planner;
+  const dest = r.destination || '目的地';
+  if (toStatus === 'on_round')               showNotification('ラウンド出発', `${name}さんがBASEを出発しました`);
+  else if (toStatus === 'at_customer')        showNotification('目的地到着',   `${name}さんが${dest}に到着しました`);
+  else if (toStatus === 'departed_customer')  showNotification('目的地出発',   `${name}さんが${dest}を出発しました`);
+  else if (toStatus === 'completed')          showNotification('BASE到着',     `${name}さんがBASEに到着しました`);
+}
+
+function checkReminders(data) {
+  const now = getNow();
+  const [nowH, nowM] = now.split(':').map(Number);
+  const nowTotal = nowH * 60 + nowM;
+
+  Object.entries(data).forEach(([id, r]) => {
+    if (r.status === 'scheduled' && r.departureTime && !notifiedScheduled.has(id)) {
+      const [dH, dM] = r.departureTime.split(':').map(Number);
+      const diff = dH * 60 + dM - nowTotal;
+      if (diff > 0 && diff <= 10) {
+        notifiedScheduled.add(id);
+        showNotification('ラウンド予定', `${r.planner}さんのラウンド出発まで${diff}分です（${r.departureTime}出発）`);
+      }
+    }
+
+    if (r.status === 'on_round' && r.expectedReturnTime && !notifiedOverdue.has(id)) {
+      if (now > r.expectedReturnTime) {
+        notifiedOverdue.add(id);
+        showNotification('戻り予定超過', `${r.planner}さんが戻り予定時刻（${r.expectedReturnTime}）を過ぎています`);
+      }
+    }
+  });
+}
+
 /* ─── Toast ─── */
 function showToast(msg) {
   let t = document.querySelector('.toast');
@@ -81,6 +130,9 @@ function initHamburger() {
 function initDashboard() {
   if (!document.getElementById('active-rounds')) return;
 
+  requestNotificationPermission();
+
+  let prevData    = null;
   let periodType  = 'daily';
   let currentDate = new Date();
 
@@ -122,10 +174,24 @@ function initDashboard() {
   btnNext.addEventListener('click', () => move(1));
 
   onValue(ref(db, 'round_data'), snapshot => {
-    cachedData = snapshot.val() || {};
+    const newData = snapshot.val() || {};
+
+    if (prevData !== null) {
+      Object.entries(newData).forEach(([id, r]) => {
+        const prev = prevData[id];
+        if (prev && prev.status !== r.status) {
+          notifyStatusChange(r, r.status);
+        }
+      });
+    }
+    prevData   = newData;
+    cachedData = newData;
+    checkReminders(cachedData);
     renderActiveRounds(cachedData);
     renderHistory(cachedData, getDates());
   });
+
+  setInterval(() => checkReminders(cachedData), 60 * 1000);
 }
 
 /* ─── Active rounds ─── */
