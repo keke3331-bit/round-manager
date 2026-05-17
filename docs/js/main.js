@@ -219,8 +219,9 @@ async function handleAction(action, roundId) {
 
   try {
     await update(ref(db, `round_data/${roundId}`), updates);
-  } catch {
-    showToast('⚠️ 更新に失敗しました');
+  } catch (err) {
+    showToast('⚠️ ' + (err.message || '更新に失敗しました'));
+    console.error(err);
   }
 }
 
@@ -358,9 +359,9 @@ function initInput() {
       expectedDeliverable: document.getElementById('expected-deliverable').value.trim(),
       date:                toISO(new Date()),
       status:              'on_round',
-      arrivedAt:           null,
-      departedCustomerAt:  null,
-      baseArrivedAt:       null,
+      arrivedAt:           '',
+      departedCustomerAt:  '',
+      baseArrivedAt:       '',
       notes:               '',
       timestamp:           Date.now(),
     };
@@ -376,8 +377,9 @@ function initInput() {
       memberError.textContent = '';
       setDefaultTimes();
       dateDisplay.textContent = toISO(new Date());
-    } catch {
-      showToast('⚠️ 登録に失敗しました');
+    } catch (err) {
+      showToast('⚠️ ' + (err.message || '登録に失敗しました'));
+      console.error(err);
     } finally {
       submitBtn.textContent = 'ラウンド開始';
       submitBtn.disabled = false;
