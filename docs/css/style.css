@@ -119,12 +119,16 @@ body {
 .info-value { color: var(--text); font-weight: 500; }
 .member-masked {
   cursor: pointer;
-  filter: blur(4px);
-  transition: filter 0.2s;
+  color: transparent;
+  text-shadow: 0 0 7px rgba(0,0,0,0.5);
+  transition: color 0.2s, text-shadow 0.2s;
   user-select: none;
 }
-.member-masked.revealed { filter: none; }
-.member-masked:hover { opacity: 0.8; }
+.member-masked.revealed {
+  color: var(--text);
+  text-shadow: none;
+}
+.member-masked:hover { opacity: 0.75; }
 
 .round-card__actions { margin-top: 4px; }
 
