@@ -15,6 +15,7 @@ const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 
 const STATUS_LABEL = {
+  scheduled:         'ラウンド予定',
   on_round:          'ラウンド中',
   at_customer:       '目的地滞在中',
   departed_customer: '帰途中',
@@ -37,6 +38,9 @@ function parseISO(str) {
 function getNow() {
   const now = new Date();
   return `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+}
+function isOverdue(r) {
+  return r.status === 'on_round' && r.expectedReturnTime && getNow() > r.expectedReturnTime;
 }
 function getWeekStart(date) {
   const d = new Date(date); d.setDate(d.getDate() - d.getDay()); return d;
@@ -140,7 +144,7 @@ function renderActiveRounds(data) {
   }
 
   container.innerHTML = active.map(r => `
-    <div class="round-card" data-status="${r.status}" data-id="${r.id}">
+    <div class="round-card" data-status="${r.status}" data-overdue="${isOverdue(r)}" data-id="${r.id}">
       <div class="round-card__header">
         <span class="planner-name">${r.planner}</span>
         <div class="card-header-right">
@@ -172,6 +176,8 @@ function renderActiveRounds(data) {
 }
 
 function actionButton(r) {
+  if (r.status === 'scheduled')
+    return `<button class="btn btn-scheduled" data-action="base_departure" data-id="${r.id}">BASE出発</button>`;
   if (r.status === 'on_round')
     return `<button class="btn btn-arrive" data-action="arrive" data-id="${r.id}">目的地到着</button>`;
   if (r.status === 'at_customer')
@@ -193,7 +199,8 @@ function dispatchAction(action, id) {
 async function handleStatusAction(action, roundId) {
   const now = getNow();
   const updates = {};
-  if (action === 'arrive')          { updates.status = 'at_customer';       updates.arrivedAt = now; }
+  if (action === 'base_departure')  { updates.status = 'on_round';          updates.departureTime = now; }
+  else if (action === 'arrive')     { updates.status = 'at_customer';       updates.arrivedAt = now; }
   else if (action === 'depart_customer') { updates.status = 'departed_customer'; updates.departedCustomerAt = now; }
   else if (action === 'base_arrived') {
     const notesEl = document.getElementById(`notes-${roundId}`);
@@ -410,7 +417,7 @@ function initInput() {
       roundPurpose:        document.getElementById('round-purpose').value.trim(),
       expectedDeliverable: document.getElementById('expected-deliverable').value.trim(),
       date:      toISO(new Date()),
-      status:    'on_round',
+      status:    `${document.getElementById('dep-hour').value}:${document.getElementById('dep-min').value}` > getNow() ? 'scheduled' : 'on_round',
       arrivedAt: '', departedCustomerAt: '', baseArrivedAt: '', notes: '',
       timestamp: Date.now(),
     };
@@ -419,7 +426,7 @@ function initInput() {
     submitBtn.textContent = '登録中…'; submitBtn.disabled = true;
     try {
       await push(ref(db, 'round_data'), roundData);
-      showToast('✅ ラウンドを開始しました');
+      showToast(roundData.status === 'scheduled' ? '✅ ラウンドを予定登録しました' : '✅ ラウンドを開始しました');
       form.reset(); memberError.textContent = ''; setDefaultTimes();
       dateDisplay.textContent = toISO(new Date());
     } catch (err) {

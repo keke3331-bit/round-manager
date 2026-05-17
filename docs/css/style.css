@@ -83,12 +83,15 @@ body {
   border-radius: var(--radius);
   border: 1px solid var(--border);
   border-left-width: 4px;
-  border-left-color: var(--accent-orange);
+  border-left-color: var(--accent-gray);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+.round-card[data-status="scheduled"]         { border-left-color: #F59E0B; }
+.round-card[data-status="on_round"]          { border-left-color: var(--accent-green); }
+.round-card[data-status="on_round"][data-overdue="true"] { border-left-color: #EF4444; }
 .round-card[data-status="at_customer"]       { border-left-color: var(--accent-green); }
 .round-card[data-status="departed_customer"] { border-left-color: var(--accent-cyan); }
 
@@ -108,7 +111,8 @@ body {
   border-radius: 20px;
   white-space: nowrap;
 }
-.status-on_round       { background: #FEF3C7; color: #92400E; }
+.status-scheduled      { background: #FEF3C7; color: #92400E; }
+.status-on_round       { background: #D1FAE5; color: #065F46; }
 .status-at_customer    { background: #D1FAE5; color: #065F46; }
 .status-departed_customer { background: #CFFAFE; color: #155E75; }
 .status-completed      { background: #F1F5F9; color: #475569; }
@@ -149,6 +153,7 @@ body {
 .btn:active { transform: scale(0.97); }
 .btn-primary   { background: var(--accent); color: #fff; width: 100%; }
 .btn-secondary { background: var(--bg); color: var(--text-light); border: 1px solid var(--border); width: 100%; }
+.btn-scheduled { background: #F59E0B; color: #fff; width: 100%; }
 .btn-arrive    { background: var(--accent-green); color: #fff; width: 100%; }
 .btn-depart    { background: var(--accent-cyan); color: #fff; width: 100%; }
 .btn-base      { background: var(--accent); color: #fff; width: 100%; margin-top: 8px; }
