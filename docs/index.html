@@ -61,6 +61,7 @@
             <th>BASE到着</th>
             <th>ステータス</th>
             <th>備考</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="history-body"></tbody>
@@ -72,6 +73,101 @@
 
 <a href="pages/input.html" class="fab">+ 新規ラウンド</a>
 
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title">ラウンド編集</h2>
+      <button class="modal__close" id="modal-close" type="button">×</button>
+    </div>
+    <form id="edit-form">
+      <input type="hidden" id="edit-id">
+
+      <div class="form-group">
+        <label for="edit-planner">プランナー名</label>
+        <select id="edit-planner">
+          <option value="井戸">井戸</option>
+          <option value="関根">関根</option>
+          <option value="柴">柴</option>
+          <option value="片桐">片桐</option>
+          <option value="渡辺">渡辺</option>
+          <option value="入江">入江</option>
+          <option value="金">金</option>
+          <option value="新田">新田</option>
+          <option value="玉井">玉井</option>
+          <option value="菊池">菊池</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-purpose">目的</label>
+        <input type="text" id="edit-purpose">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit-dep-time">出発時間</label>
+          <input type="time" id="edit-dep-time">
+        </div>
+        <div class="form-group">
+          <label for="edit-ret-time">戻り予定時間</label>
+          <input type="time" id="edit-ret-time">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-destination">目的地</label>
+        <input type="text" id="edit-destination">
+      </div>
+
+      <div class="form-group">
+        <label for="edit-member">会員番号</label>
+        <input type="text" id="edit-member" maxlength="20">
+        <p class="field-error" id="edit-member-error"></p>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-round-purpose">ラウンド目的</label>
+        <textarea id="edit-round-purpose" rows="2"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-deliverable">見込み成果物</label>
+        <textarea id="edit-deliverable" rows="2"></textarea>
+      </div>
+
+      <p class="modal-section-label">タイムスタンプ</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="edit-arrived">お客様宅到着</label>
+          <input type="time" id="edit-arrived">
+        </div>
+        <div class="form-group">
+          <label for="edit-departed">お客様宅出発</label>
+          <input type="time" id="edit-departed">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="edit-base">BASE到着</label>
+        <input type="time" id="edit-base">
+      </div>
+
+      <div class="form-group">
+        <label for="edit-notes">備考</label>
+        <textarea id="edit-notes" rows="2"></textarea>
+      </div>
+
+      <div class="btn-group">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <button type="button" id="modal-cancel" class="btn btn-secondary">キャンセル</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast"></div>
 <script type="module" src="js/main.js"></script>
 </body>
 </html>

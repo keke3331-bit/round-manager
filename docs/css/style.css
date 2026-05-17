@@ -350,4 +350,89 @@ tr:nth-child(even) td { background: #F8FAFC; }
   .fab { bottom: 16px; right: 16px; padding: 10px 16px; font-size: 12px; }
   .period-bar { gap: 6px; }
   .period-label { margin-left: 0; width: 100%; }
+  .modal-overlay { padding: 52px 12px 12px; }
 }
+
+/* ─── MODAL ─── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 300;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 60px 20px 20px;
+  overflow-y: auto;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+}
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.modal__title { font-size: 16px; font-weight: 700; }
+.modal__close {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+  padding: 2px 6px;
+}
+.modal__close:hover { color: var(--text); }
+.modal-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin: 16px 0 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+/* ─── CARD EDIT/DELETE BUTTONS ─── */
+.card-header-right { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.btn-icon {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  width: 26px;
+  height: 26px;
+  font-size: 14px;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.btn-icon:hover { color: var(--accent); border-color: var(--accent); background: var(--bg); }
+.btn-icon--danger:hover { color: #EF4444; border-color: #FCA5A5; }
+
+/* ─── TABLE ACTION BUTTONS ─── */
+.action-btns { display: flex; gap: 6px; }
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 500;
+  border: 1px solid;
+  white-space: nowrap;
+  background: none;
+}
+.btn-sm--edit  { border-color: var(--border); color: var(--text-light); }
+.btn-sm--edit:hover  { border-color: var(--accent); color: var(--accent); }
+.btn-sm--delete { border-color: #FCA5A5; color: #EF4444; }
+.btn-sm--delete:hover { background: #FEE2E2; }
