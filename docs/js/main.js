@@ -76,7 +76,7 @@ function showNotification(title, body) {
 function notifyStatusChange(r, toStatus) {
   const name = r.planner;
   const dest = r.destination || '目的地';
-  if (toStatus === 'on_round')               showNotification('ラウンド出発', `${name}さんがBASEを出発しました`);
+  if (toStatus === 'on_round')               showNotification('ラウンド出発', `${name}さんがBASEを出発しました（戻り予定：${r.expectedReturnTime}）`);
   else if (toStatus === 'at_customer')        showNotification('目的地到着',   `${name}さんが${dest}に到着しました`);
   else if (toStatus === 'departed_customer')  showNotification('目的地出発',   `${name}さんが${dest}を出発しました`);
   else if (toStatus === 'completed')          showNotification('BASE到着',     `${name}さんがBASEに到着しました`);
