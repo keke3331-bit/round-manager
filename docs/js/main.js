@@ -270,13 +270,16 @@ async function handleStatusAction(action, roundId) {
   const updates = {};
   if (action === 'base_departure') {
     const r = cachedData[roundId];
-    const confirmed = await showDepartureChecklist(r?.planner || '');
-    if (!confirmed) return;
+    if (r?.purpose !== '外出') {
+      const confirmed = await showDepartureChecklist(r?.planner || '');
+      if (!confirmed) return;
+    }
     updates.status = 'on_round'; updates.departureTime = now;
-  } else
-  else if (action === 'arrive')     { updates.status = 'at_customer';       updates.arrivedAt = now; }
-  else if (action === 'depart_customer') { updates.status = 'departed_customer'; updates.departedCustomerAt = now; }
-  else if (action === 'base_arrived') {
+  } else if (action === 'arrive') {
+    updates.status = 'at_customer'; updates.arrivedAt = now;
+  } else if (action === 'depart_customer') {
+    updates.status = 'departed_customer'; updates.departedCustomerAt = now;
+  } else if (action === 'base_arrived') {
     const notesEl = document.getElementById(`notes-${roundId}`);
     updates.status = 'completed'; updates.baseArrivedAt = now;
     updates.notes = notesEl ? notesEl.value.trim() : '';
@@ -312,7 +315,7 @@ function renderHistory(data, dates) {
   rows.forEach(r => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>${r.date}</td>
+      <td class="date-link" data-id="${r.id}">${r.date}</td>
       <td>${r.planner}</td>
       <td>${r.destination || '-'}</td>
       <td>${r.vehicle || '-'}</td>
@@ -336,6 +339,53 @@ function renderHistory(data, dates) {
   tbody.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', () => dispatchAction(btn.dataset.action, btn.dataset.id));
   });
+
+  tbody.querySelectorAll('.date-link').forEach(td => {
+    td.addEventListener('click', () => showRoundDetail({ id: td.dataset.id, ...cachedData[td.dataset.id] }));
+  });
+}
+
+/* ─── Round detail modal ─── */
+function showRoundDetail(r) {
+  if (!r) return;
+  const existing = document.getElementById('detail-modal');
+  if (existing) existing.remove();
+
+  const fields = [
+    ['プランナー',     r.planner],
+    ['使用車両',       r.vehicle],
+    ['外出理由',       r.purpose],
+    ['目的地',         r.destination],
+    ['出発',           r.departureTime],
+    ['戻り予定',       r.expectedReturnTime],
+    ['会員番号',       r.memberNumber],
+    ['目的',           r.roundPurpose],
+    ['見込み成果物',   r.expectedDeliverable],
+    ['目的地到着',     r.arrivedAt],
+    ['目的地出発',     r.departedCustomerAt],
+    ['BASE到着',       r.baseArrivedAt],
+    ['備考',           r.notes],
+    ['ステータス',     STATUS_LABEL[r.status] || r.status],
+  ].filter(([, v]) => v);
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay open';
+  overlay.id = 'detail-modal';
+  overlay.innerHTML = `
+    <div class="modal">
+      <div class="modal__header">
+        <h2 class="modal__title">${r.date}｜${r.planner}さんのラウンド</h2>
+        <button class="modal__close" id="detail-close">×</button>
+      </div>
+      <dl class="detail-list">
+        ${fields.map(([k, v]) => `<div class="detail-row"><dt>${k}</dt><dd>${v}</dd></div>`).join('')}
+      </dl>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('#detail-close').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
 
 /* ─── Delete ─── */
@@ -451,9 +501,13 @@ function showDepartureChecklist(planner) {
             <input type="checkbox" id="chk-belongings">
             <span>持ち物を確認しましたか？</span>
           </label>
+          <label class="check-item">
+            <input type="checkbox" id="chk-documents">
+            <span>書類を持ちましたか？</span>
+          </label>
         </div>
         <div class="form-group" style="margin-top:20px">
-          <label for="chk-double">ダブルチェック担当者（${planner}さん以外）</label>
+          <label for="chk-double">ダブルチェック担当者（${planner}さんを除く）</label>
           <select id="chk-double">
             <option value="">選択してください</option>
             ${PLANNERS.filter(p => p !== planner).map(p => `<option value="${p}">${p}</option>`).join('')}
@@ -469,15 +523,17 @@ function showDepartureChecklist(planner) {
 
     const licenseChk    = overlay.querySelector('#chk-license');
     const belongingsChk = overlay.querySelector('#chk-belongings');
+    const documentsChk  = overlay.querySelector('#chk-documents');
     const doubleSelect  = overlay.querySelector('#chk-double');
     const confirmBtn    = overlay.querySelector('#chk-confirm');
     const cancelBtn     = overlay.querySelector('#chk-cancel');
 
     function updateBtn() {
-      confirmBtn.disabled = !(licenseChk.checked && belongingsChk.checked && doubleSelect.value);
+      confirmBtn.disabled = !(licenseChk.checked && belongingsChk.checked && documentsChk.checked && doubleSelect.value);
     }
     licenseChk.addEventListener('change', updateBtn);
     belongingsChk.addEventListener('change', updateBtn);
+    documentsChk.addEventListener('change', updateBtn);
     doubleSelect.addEventListener('change', updateBtn);
 
     confirmBtn.addEventListener('click', () => { overlay.remove(); resolve(true); });
@@ -577,7 +633,8 @@ function initInput() {
     const depTime = `${document.getElementById('dep-hour').value}:${document.getElementById('dep-min').value}`;
     const status  = depTime > getNow() ? 'scheduled' : 'on_round';
 
-    if (status === 'on_round') {
+    const purpose = document.getElementById('purpose').value;
+    if (status === 'on_round' && purpose !== '外出') {
       const confirmed = await showDepartureChecklist(planner);
       if (!confirmed) return;
     }

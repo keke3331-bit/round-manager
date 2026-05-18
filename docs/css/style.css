@@ -319,6 +319,23 @@ tr:nth-child(even) td { background: #F8FAFC; }
 .postal-wrap input { flex: 1; }
 .postal-status { font-size: 12px; color: var(--text-muted); white-space: nowrap; min-width: 60px; }
 
+/* ─── DATE LINK ─── */
+.date-link { cursor: pointer; color: var(--accent); text-decoration: underline; }
+.date-link:hover { opacity: 0.75; }
+
+/* ─── ROUND DETAIL MODAL ─── */
+.detail-list { display: flex; flex-direction: column; }
+.detail-row {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-row dt { color: var(--text-muted); min-width: 100px; flex-shrink: 0; }
+.detail-row dd { color: var(--text); word-break: break-all; }
+
 /* ─── DEPARTURE CHECKLIST MODAL ─── */
 .checklist-sub { font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
 .checklist { display: flex; flex-direction: column; gap: 12px; }
