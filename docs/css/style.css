@@ -171,6 +171,8 @@ body {
   transition: background 0.1s;
 }
 .btn-nav:hover { background: var(--bg); }
+.btn-nav--print { background: var(--text); color: #fff; border-color: var(--text); margin-left: auto; }
+.btn-nav--print:hover { background: #334155; }
 
 /* ─── NOTES TEXTAREA ─── */
 .notes-input-wrap { display: flex; flex-direction: column; }

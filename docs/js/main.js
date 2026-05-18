@@ -174,6 +174,9 @@ function initDashboard() {
   dateInput.addEventListener('change',    e => { currentDate = parseISO(e.target.value); updatePeriodLabel(); renderHistory(cachedData, getDates()); });
   btnPrev.addEventListener('click', () => move(-1));
   btnNext.addEventListener('click', () => move(1));
+  document.getElementById('btn-print-report')?.addEventListener('click', () => {
+    printMonthlyReport(currentDate.getFullYear(), currentDate.getMonth() + 1, cachedData);
+  });
 
   onValue(ref(db, 'round_data'), snapshot => {
     const newData = snapshot.val() || {};
@@ -344,6 +347,129 @@ function renderHistory(data, dates) {
   tbody.querySelectorAll('.date-link').forEach(td => {
     td.addEventListener('click', () => showRoundDetail({ id: td.dataset.id, ...cachedData[td.dataset.id] }));
   });
+}
+
+/* ─── Monthly report (print window) ─── */
+function printMonthlyReport(year, month, data) {
+  const dates   = getMonthDates(year, month);
+  const dateSet = new Set(dates);
+  const rounds  = Object.entries(data)
+    .map(([id, r]) => ({ id, ...r }))
+    .filter(r => dateSet.has(r.date))
+    .sort((a, b) => a.date !== b.date
+      ? a.date.localeCompare(b.date)
+      : (a.departureTime || '').localeCompare(b.departureTime || ''));
+
+  const title  = `${year}年${month}月 ラウンドレポート`;
+  const today  = toISO(new Date());
+  const labels = { scheduled:'ラウンド予定', on_round:'ラウンド中', at_customer:'目的地滞在中', departed_customer:'帰途中', completed:'完了' };
+
+  const summaryRows = rounds.map(r => `
+    <tr>
+      <td>${r.date}</td>
+      <td>${r.planner}</td>
+      <td>${r.vehicle || '-'}</td>
+      <td>${r.purpose || '-'}</td>
+      <td>${r.destination || '-'}</td>
+      <td>${r.departureTime || '-'}</td>
+      <td>${r.expectedReturnTime || '-'}</td>
+      <td>${r.baseArrivedAt || '-'}</td>
+      <td>${r.doubleChecker || '-'}</td>
+      <td><span class="pill pill--${r.status}">${labels[r.status] || r.status}</span></td>
+    </tr>`).join('');
+
+  const detailCards = rounds.map((r, i) => {
+    const row = (label, val, full) => val
+      ? `<div class="field${full ? ' full' : ''}"><dt>${label}</dt><dd>${val}</dd></div>` : '';
+    return `
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-left">${i + 1}. ${r.date}　${r.planner}</span>
+        <span class="card-head-right">${r.vehicle || ''}</span>
+      </div>
+      <dl class="card-body">
+        ${row('外出理由', r.purpose)}
+        ${row('目的地', r.destination)}
+        ${row('出発', r.departureTime)}
+        ${row('戻り予定', r.expectedReturnTime)}
+        ${row('目的地到着', r.arrivedAt)}
+        ${row('目的地出発', r.departedCustomerAt)}
+        ${row('BASE到着', r.baseArrivedAt)}
+        ${row('ダブルチェック担当者', r.doubleChecker)}
+        ${row('会員番号', r.memberNumber)}
+        ${row('目的', r.roundPurpose, true)}
+        ${row('見込み成果物', r.expectedDeliverable, true)}
+        ${row('備考', r.notes, true)}
+        ${row('ステータス', labels[r.status] || r.status)}
+      </dl>
+    </div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Yu Gothic','Hiragino Sans',sans-serif;font-size:12px;color:#1E293B;padding:20px}
+h1{font-size:17px;margin-bottom:4px}
+.meta{font-size:11px;color:#64748B;margin-bottom:16px}
+.btn-row{display:flex;gap:8px;margin-bottom:20px}
+button{padding:7px 16px;border-radius:4px;cursor:pointer;font-size:12px;border:1px solid #CBD5E1;font-family:inherit}
+.btn-print{background:#1E293B;color:#fff;border-color:#1E293B}
+.section-label{font-size:12px;font-weight:700;margin:20px 0 10px;padding-bottom:5px;border-bottom:2px solid #1E293B}
+/* summary */
+table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:4px}
+th,td{border:1px solid #CBD5E1;padding:5px 7px;text-align:left;vertical-align:top}
+th{background:#F1F5F9;font-weight:600;white-space:nowrap}
+.pill{display:inline-block;padding:1px 6px;border-radius:10px;font-size:10px;font-weight:600}
+.pill--completed{background:#F1F5F9;color:#475569}
+.pill--on_round,.pill--at_customer,.pill--departed_customer{background:#D1FAE5;color:#065F46}
+.pill--scheduled{background:#FEF3C7;color:#92400E}
+/* detail cards */
+.card{border:1px solid #CBD5E1;border-radius:5px;margin-bottom:10px;page-break-inside:avoid}
+.card-head{background:#F1F5F9;padding:7px 12px;display:flex;justify-content:space-between;align-items:center;border-radius:5px 5px 0 0}
+.card-head-left{font-weight:700;font-size:12px}
+.card-head-right{font-size:11px;color:#64748B}
+.card-body{padding:8px 12px;display:grid;grid-template-columns:1fr 1fr;gap:2px 16px}
+.field{display:flex;gap:6px;padding:3px 0;font-size:11px}
+.field.full{grid-column:1/-1}
+.field dt{color:#64748B;min-width:100px;flex-shrink:0}
+.field dd{color:#1E293B;word-break:break-all}
+.empty{color:#9CA3AF;text-align:center;padding:40px}
+@media print{
+  .no-print{display:none!important}
+  body{padding:8mm}
+  @page{margin:8mm}
+}
+</style>
+</head>
+<body>
+<h1>${title}</h1>
+<p class="meta">出力日：${today}　全${rounds.length}ラウンド</p>
+<div class="btn-row no-print">
+  <button class="btn-print" onclick="window.print()">印刷</button>
+  <button onclick="window.close()">閉じる</button>
+</div>
+${rounds.length === 0 ? '<p class="empty">該当月のデータがありません</p>' : `
+<p class="section-label">概要一覧</p>
+<table>
+  <thead><tr>
+    <th>日付</th><th>プランナー</th><th>使用車両</th><th>外出理由</th><th>目的地</th>
+    <th>出発</th><th>戻り予定</th><th>BASE到着</th><th>ダブルチェック</th><th>ステータス</th>
+  </tr></thead>
+  <tbody>${summaryRows}</tbody>
+</table>
+<p class="section-label">詳細</p>
+${detailCards}
+`}
+</body>
+</html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
 }
 
 /* ─── Round detail modal ─── */
