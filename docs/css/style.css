@@ -319,6 +319,28 @@ tr:nth-child(even) td { background: #F8FAFC; }
 .postal-wrap input { flex: 1; }
 .postal-status { font-size: 12px; color: var(--text-muted); white-space: nowrap; min-width: 60px; }
 
+/* ─── DEPARTURE CHECKLIST MODAL ─── */
+.checklist-sub { font-size: 13px; color: var(--text-light); margin-bottom: 16px; }
+.checklist { display: flex; flex-direction: column; gap: 12px; }
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 14px;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.check-item:hover { background: #EFF6FF; border-color: var(--accent); }
+.check-item input[type="checkbox"] {
+  width: 18px; height: 18px; flex-shrink: 0;
+  cursor: pointer; accent-color: var(--accent);
+}
+
 .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
 .back-link {
   display: inline-block;

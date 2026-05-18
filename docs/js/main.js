@@ -22,6 +22,8 @@ const STATUS_LABEL = {
   completed:         '完了',
 };
 
+const PLANNERS = ['井戸', '関根', '柴', '片桐', '渡辺', '入江', '金', '新田', '玉井', '菊池'];
+
 let cachedData = {};
 
 /* ─── Date helpers ─── */
@@ -221,6 +223,7 @@ function renderActiveRounds(data) {
       </div>
       <div class="round-card__body">
         <div class="round-info"><span class="info-label">目的地</span><span class="info-value">${r.destination || '-'}</span></div>
+        ${r.vehicle ? `<div class="round-info"><span class="info-label">使用車両</span><span class="info-value">${r.vehicle}</span></div>` : ''}
         <div class="round-info"><span class="info-label">出発</span><span class="info-value">${r.departureTime} → 戻り予定 ${r.expectedReturnTime}</span></div>
         ${r.purpose      ? `<div class="round-info"><span class="info-label">外出理由</span><span class="info-value">${r.purpose}</span></div>` : ''}
         ${r.memberNumber ? `<div class="round-info"><span class="info-label">会員番号</span><span class="info-value member-masked">${r.memberNumber}</span></div>` : ''}
@@ -265,7 +268,12 @@ function dispatchAction(action, id) {
 async function handleStatusAction(action, roundId) {
   const now = getNow();
   const updates = {};
-  if (action === 'base_departure')  { updates.status = 'on_round';          updates.departureTime = now; }
+  if (action === 'base_departure') {
+    const r = cachedData[roundId];
+    const confirmed = await showDepartureChecklist(r?.planner || '');
+    if (!confirmed) return;
+    updates.status = 'on_round'; updates.departureTime = now;
+  } else
   else if (action === 'arrive')     { updates.status = 'at_customer';       updates.arrivedAt = now; }
   else if (action === 'depart_customer') { updates.status = 'departed_customer'; updates.departedCustomerAt = now; }
   else if (action === 'base_arrived') {
@@ -297,7 +305,7 @@ function renderHistory(data, dates) {
 
   tbody.innerHTML = '';
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#9CA3AF;padding:20px">データがありません</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;color:#9CA3AF;padding:20px">データがありません</td></tr>';
     return;
   }
 
@@ -307,6 +315,7 @@ function renderHistory(data, dates) {
       <td>${r.date}</td>
       <td>${r.planner}</td>
       <td>${r.destination || '-'}</td>
+      <td>${r.vehicle || '-'}</td>
       <td>${r.departureTime || '-'}</td>
       <td>${r.expectedReturnTime || '-'}</td>
       <td>${r.arrivedAt || '-'}</td>
@@ -349,6 +358,7 @@ function openEditModal(roundId, data) {
 
   document.getElementById('edit-id').value               = roundId;
   document.getElementById('edit-planner').value          = data.planner || '';
+  document.getElementById('edit-vehicle').value          = data.vehicle || '';
   document.getElementById('edit-purpose').value          = data.purpose || '';
   document.getElementById('edit-dep-time').value         = data.departureTime || '';
   document.getElementById('edit-ret-time').value         = data.expectedReturnTime || '';
@@ -393,6 +403,7 @@ function initEditModal() {
     }
     const updates = {
       planner:             document.getElementById('edit-planner').value,
+      vehicle:             document.getElementById('edit-vehicle').value,
       purpose:             document.getElementById('edit-purpose').value.trim(),
       departureTime:       document.getElementById('edit-dep-time').value,
       expectedReturnTime:  document.getElementById('edit-ret-time').value,
@@ -413,6 +424,64 @@ function initEditModal() {
       showToast('⚠️ ' + (err.message || '保存に失敗しました'));
       console.error(err);
     }
+  });
+}
+
+/* ─── Departure checklist modal ─── */
+function showDepartureChecklist(planner) {
+  return new Promise(resolve => {
+    const existing = document.getElementById('checklist-modal');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay open';
+    overlay.id = 'checklist-modal';
+    overlay.innerHTML = `
+      <div class="modal">
+        <div class="modal__header">
+          <h2 class="modal__title">出発前確認</h2>
+        </div>
+        <p class="checklist-sub">${planner}さんの出発前に確認してください</p>
+        <div class="checklist">
+          <label class="check-item">
+            <input type="checkbox" id="chk-license">
+            <span>免許証を携帯していますか？</span>
+          </label>
+          <label class="check-item">
+            <input type="checkbox" id="chk-belongings">
+            <span>持ち物を確認しましたか？</span>
+          </label>
+        </div>
+        <div class="form-group" style="margin-top:20px">
+          <label for="chk-double">ダブルチェック担当者（${planner}さん以外）</label>
+          <select id="chk-double">
+            <option value="">選択してください</option>
+            ${PLANNERS.filter(p => p !== planner).map(p => `<option value="${p}">${p}</option>`).join('')}
+          </select>
+        </div>
+        <div class="btn-group">
+          <button type="button" id="chk-confirm" class="btn btn-primary" disabled>確認完了・出発</button>
+          <button type="button" id="chk-cancel" class="btn btn-secondary">キャンセル</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const licenseChk    = overlay.querySelector('#chk-license');
+    const belongingsChk = overlay.querySelector('#chk-belongings');
+    const doubleSelect  = overlay.querySelector('#chk-double');
+    const confirmBtn    = overlay.querySelector('#chk-confirm');
+    const cancelBtn     = overlay.querySelector('#chk-cancel');
+
+    function updateBtn() {
+      confirmBtn.disabled = !(licenseChk.checked && belongingsChk.checked && doubleSelect.value);
+    }
+    licenseChk.addEventListener('change', updateBtn);
+    belongingsChk.addEventListener('change', updateBtn);
+    doubleSelect.addEventListener('change', updateBtn);
+
+    confirmBtn.addEventListener('click', () => { overlay.remove(); resolve(true); });
+    cancelBtn.addEventListener('click',  () => { overlay.remove(); resolve(false); });
   });
 }
 
@@ -498,22 +567,33 @@ function initInput() {
     e.preventDefault();
     const planner     = document.getElementById('planner-select').value;
     const destination = document.getElementById('destination').value.trim();
+    const vehicle     = document.getElementById('vehicle').value;
     const memberVal   = document.getElementById('member-number').value.trim();
     if (!planner)     { showToast('プランナーを選択してください'); return; }
     if (!destination) { showToast('目的地を入力してください'); return; }
+    if (!vehicle)     { showToast('使用車両を選択してください'); return; }
     if (memberVal && memberVal.length !== 8) { memberError.textContent = '会員番号は8桁で入力してください'; return; }
+
+    const depTime = `${document.getElementById('dep-hour').value}:${document.getElementById('dep-min').value}`;
+    const status  = depTime > getNow() ? 'scheduled' : 'on_round';
+
+    if (status === 'on_round') {
+      const confirmed = await showDepartureChecklist(planner);
+      if (!confirmed) return;
+    }
 
     const roundData = {
       planner,
+      vehicle,
       purpose:             document.getElementById('purpose').value.trim(),
-      departureTime:       `${document.getElementById('dep-hour').value}:${document.getElementById('dep-min').value}`,
+      departureTime:       depTime,
       expectedReturnTime:  `${document.getElementById('ret-hour').value}:${document.getElementById('ret-min').value}`,
       memberNumber:        memberVal,
       destination,
       roundPurpose:        document.getElementById('round-purpose').value.trim(),
       expectedDeliverable: document.getElementById('expected-deliverable').value.trim(),
       date:      toISO(new Date()),
-      status:    `${document.getElementById('dep-hour').value}:${document.getElementById('dep-min').value}` > getNow() ? 'scheduled' : 'on_round',
+      status,
       arrivedAt: '', departedCustomerAt: '', baseArrivedAt: '', notes: '',
       timestamp: Date.now(),
     };
@@ -522,8 +602,8 @@ function initInput() {
     submitBtn.textContent = '登録中…'; submitBtn.disabled = true;
     try {
       await push(ref(db, 'round_data'), roundData);
-      showToast(roundData.status === 'scheduled' ? '✅ ラウンドを予定登録しました' : '✅ ラウンドを開始しました');
-      form.reset(); memberError.textContent = ''; setDefaultTimes();
+      showToast(status === 'scheduled' ? '✅ ラウンドを予定登録しました' : '✅ ラウンドを開始しました');
+      form.reset(); memberError.textContent = ''; postalStatus.textContent = ''; setDefaultTimes();
       dateDisplay.textContent = toISO(new Date());
     } catch (err) {
       showToast('⚠️ ' + (err.message || '登録に失敗しました'));
