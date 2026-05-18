@@ -271,8 +271,9 @@ async function handleStatusAction(action, roundId) {
   if (action === 'base_departure') {
     const r = cachedData[roundId];
     if (r?.purpose !== '外出') {
-      const confirmed = await showDepartureChecklist(r?.planner || '');
-      if (!confirmed) return;
+      const doubleChecker = await showDepartureChecklist(r?.planner || '');
+      if (!doubleChecker) return;
+      updates.doubleChecker = doubleChecker;
     }
     updates.status = 'on_round'; updates.departureTime = now;
   } else if (action === 'arrive') {
@@ -352,20 +353,21 @@ function showRoundDetail(r) {
   if (existing) existing.remove();
 
   const fields = [
-    ['プランナー',     r.planner],
-    ['使用車両',       r.vehicle],
-    ['外出理由',       r.purpose],
-    ['目的地',         r.destination],
-    ['出発',           r.departureTime],
-    ['戻り予定',       r.expectedReturnTime],
-    ['会員番号',       r.memberNumber],
-    ['目的',           r.roundPurpose],
-    ['見込み成果物',   r.expectedDeliverable],
-    ['目的地到着',     r.arrivedAt],
-    ['目的地出発',     r.departedCustomerAt],
-    ['BASE到着',       r.baseArrivedAt],
-    ['備考',           r.notes],
-    ['ステータス',     STATUS_LABEL[r.status] || r.status],
+    ['プランナー',           r.planner],
+    ['使用車両',             r.vehicle],
+    ['ダブルチェック担当者', r.doubleChecker],
+    ['外出理由',             r.purpose],
+    ['目的地',               r.destination],
+    ['出発',                 r.departureTime],
+    ['戻り予定',             r.expectedReturnTime],
+    ['会員番号',             r.memberNumber],
+    ['目的',                 r.roundPurpose],
+    ['見込み成果物',         r.expectedDeliverable],
+    ['目的地到着',           r.arrivedAt],
+    ['目的地出発',           r.departedCustomerAt],
+    ['BASE到着',             r.baseArrivedAt],
+    ['備考',                 r.notes],
+    ['ステータス',           STATUS_LABEL[r.status] || r.status],
   ].filter(([, v]) => v);
 
   const overlay = document.createElement('div');
@@ -536,8 +538,8 @@ function showDepartureChecklist(planner) {
     documentsChk.addEventListener('change', updateBtn);
     doubleSelect.addEventListener('change', updateBtn);
 
-    confirmBtn.addEventListener('click', () => { overlay.remove(); resolve(true); });
-    cancelBtn.addEventListener('click',  () => { overlay.remove(); resolve(false); });
+    confirmBtn.addEventListener('click', () => { overlay.remove(); resolve(doubleSelect.value); });
+    cancelBtn.addEventListener('click',  () => { overlay.remove(); resolve(null); });
   });
 }
 
@@ -634,14 +636,16 @@ function initInput() {
     const status  = depTime > getNow() ? 'scheduled' : 'on_round';
 
     const purpose = document.getElementById('purpose').value;
+    let doubleChecker = '';
     if (status === 'on_round' && purpose !== '外出') {
-      const confirmed = await showDepartureChecklist(planner);
-      if (!confirmed) return;
+      doubleChecker = await showDepartureChecklist(planner);
+      if (!doubleChecker) return;
     }
 
     const roundData = {
       planner,
       vehicle,
+      doubleChecker,
       purpose:             document.getElementById('purpose').value.trim(),
       departureTime:       depTime,
       expectedReturnTime:  `${document.getElementById('ret-hour').value}:${document.getElementById('ret-min').value}`,
