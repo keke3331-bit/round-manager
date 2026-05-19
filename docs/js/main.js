@@ -675,7 +675,7 @@ async function lookupPostalCode(zip) {
   const json = await res.json();
   if (json.results && json.results.length > 0) {
     const r = json.results[0];
-    return r.address1 + r.address2;
+    return r.address2 + (r.address3 || '');
   }
   return null;
 }
